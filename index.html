@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+  <meta charset="utf-8">
+  <title>Tìm điểm ăn chơi</title>
+  <style>
+    /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+    #map {
+      height: 100%;
+    }
+
+    /* Optional: Makes the sample page fill the window. */
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    .pac-card {
+      margin: 10px 10px 0 0;
+      border-radius: 2px 0 0 2px;
+      box-sizing: border-box;
+      -moz-box-sizing: border-box;
+      outline: none;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+      background-color: #fff;
+      font-family: Roboto;
+    }
+
+    #pac-container {
+      padding-bottom: 12px;
+      margin-right: 12px;
+    }
+
+    .pac-controls {
+      display: inline-block;
+      padding: 5px 11px;
+    }
+
+    .pac-controls label {
+      font-family: Roboto;
+      font-size: 13px;
+      font-weight: 300;
+    }
+
+    .controls {
+      background-color: #fff;
+      font-family: Roboto;
+      font-size: 15px;
+      font-weight: 300;
+      margin-left: 12px;
+      padding: 0 11px 0 13px;
+      text-overflow: ellipsis;
+      width: 40%;
+    }
+
+    .controls:focus {
+      border-color: #4d90fe;
+    }
+  </style>
+</head>
+
+<body>
+  <input id="pac-input" class="controls" type="text" placeholder="Place 1">
+  <input id="pac-input2" class="controls" type="text" placeholder="Place 2">
+  <div id="map"></div>
+  <script>
+    var distance;
+    var place1, place2;
+    var circle, circle2;
+
+    function initMap() {
+      // Create the map.
+      var map = new google.maps.Map(document.getElementById('map'), {
+        zoom: 13,
+        center: { lat: 21.0244247, lng: 105.7938073 },
+        mapTypeId: 'terrain'
+      });
+
+      // Create the search box and link it to the UI element.
+      var input = document.getElementById('pac-input');
+      var input2 = document.getElementById('pac-input2');
+
+      var searchBox = new google.maps.places.SearchBox(input);
+      var searchBox2 = new google.maps.places.SearchBox(input2);
+
+      //map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
+      //map.controls[google.maps.ControlPosition.TOP_CENTER].push(input2);
+
+      // Bias the SearchBox results towards current map's viewport.
+      map.addListener('bounds_changed', function () {
+        searchBox.setBounds(map.getBounds());
+      });
+
+      map.addListener('bounds_changed', function () {
+        searchBox2.setBounds(map.getBounds());
+      });
+
+      var markers = [];
+      var markers2 = [];
+
+      // Listen for the event fired when the user selects a prediction and retrieve
+      // more details for that place.
+      searchBox.addListener('places_changed', function () {
+        var places = searchBox.getPlaces();
+
+        if (places.length == 0) {
+          return;
+        }
+
+        // Clear out the old markers.
+        markers.forEach(function (marker) {
+          marker.setMap(null);
+        });
+        markers = [];
+
+        places.forEach(function (place) {
+          if (!place.geometry) {
+            console.log("Returned place contains no geometry");
+            return;
+          }
+          place1 = place.geometry.location
+          // Create a marker for each place.
+          markers.push(new google.maps.Marker({
+            map: map,
+            title: place.name,
+            position: place1
+          }));
+
+          if (place2 != null) {
+            displayRadius(place1, place2)
+          }
+        });
+      });
+
+      searchBox2.addListener('places_changed', function () {
+        var places = searchBox2.getPlaces();
+
+        if (places.length == 0) {
+          return;
+        }
+
+        // Clear out the old markers.
+        markers2.forEach(function (marker2) {
+          marker2.setMap(null);
+        });
+        markers2 = [];
+
+        places.forEach(function (place) {
+          if (!place.geometry) {
+            console.log("Returned place contains no geometry");
+            return;
+          }
+          place2 = place.geometry.location
+          // Create a marker for each place.
+          markers2.push(new google.maps.Marker({
+            map: map,
+            title: place.name,
+            position: place2
+          }));
+          if (place1 != null) {
+            displayRadius(place1, place2)
+          }
+        });
+      });
+
+      function displayRadius(place1, place2) {
+        distance = google.maps.geometry.spherical.computeDistanceBetween(place1, place2)
+
+        if (circle != null)
+          circle.setMap(null);
+
+        if (circle2 != null)
+          circle2.setMap(null);
+
+        // Add the circle for this
+        circle = new google.maps.Circle({
+          strokeColor: '#FF0000',
+          strokeOpacity: 0.8,
+          strokeWeight: 1,
+          fillColor: '#FF0000',
+          fillOpacity: 0.1,
+          map: map,
+          center: place1,
+          radius: distance
+        });
+
+        circle2 = new google.maps.Circle({
+          strokeColor: '#FF0000',
+          strokeOpacity: 0.8,
+          strokeWeight: 1,
+          fillColor: '#FF0000',
+          fillOpacity: 0.1,
+          map: map,
+          center: place2,
+          radius: distance
+        });
+
+        var bounds = new google.maps.LatLngBounds();
+        bounds.extend(place1);
+        bounds.extend(place2);
+        map.fitBounds(bounds);
+      }
+    }
+
+
+  </script>
+  <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBMZKcVJJ0FCXeUyYYsVl5_Y22aIOgTAxQ&callback=initMap&libraries=geometry,places&region=VN"
+    type="text/javascript"></script>
+</body>
+
+</html>
